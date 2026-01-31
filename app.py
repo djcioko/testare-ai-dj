@@ -1,79 +1,74 @@
 import streamlit as st
 import random
-import os
 from PIL import Image
 
-# Configurare pagină
-st.set_page_config(page_title="HERCULE AI - NO ERRORS", layout="wide")
+# Configurare aplicație
+st.set_page_config(page_title="HERCULE AI - DJ VIZUAL", layout="wide")
 
-# 1. MEMORIE PERSISTENTĂ
-LOG_FILE = "hercule_history.txt"
-if "istoric" not in st.session_state:
-    if os.path.exists(LOG_FILE):
-        with open(LOG_FILE, "r") as f:
-            st.session_state.istoric = [l.strip().split("|") for l in f.readlines()[::-1][:5]]
-    else:
-        st.session_state.istoric = []
+# Starea pentru căutarea curentă (Predictia)
+if "search_query" not in st.session_state:
+    st.session_state.search_query = "trending music"
 
-if "yt_id" not in st.session_state:
-    st.session_state.yt_id = "v2H4l9RpkwM"
-
-st.title("⚡ HERCULE AI: Analiză Vizuală & Auto-Play")
+st.title("⚡ HERCULE AI: DJ Vizual Instant")
+st.write("Fă o poză ca să prezic melodia potrivită pentru hainele și starea ta!")
 
 col1, col2 = st.columns([1, 1])
 
 with col1:
     st.subheader("📸 Senzor Vizual")
+    # Take Photo & Upload
     foto = st.camera_input("Fă o poză")
-    upload = st.file_uploader("Sau încarcă o fotografie", type=['jpg', 'png', 'jpeg'])
+    upload = st.file_uploader("Sau încarcă o poză", type=['jpg', 'png', 'jpeg'])
     
     sursa = foto if foto else upload
 
     if sursa:
         img = Image.open(sursa)
-        st.image(img, width=250)
+        st.image(img, width=300)
         
-        # 3. ANALIZĂ VIZUALĂ SIMPLĂ (Fără API Key, deci fără erori)
-        with st.spinner('AI-ul analizează culorile hainelor...'):
-            # Calculăm o valoare medie a culorilor pentru a decide vibe-ul
-            # Asta e analiză reală pe pixelii pozei tale
+        with st.spinner('AI-ul prezice melodia după culori...'):
+            # ANALIZĂ VIZUALĂ: Citim pixelii pentru a genera o predicție reală
             img_small = img.resize((1, 1))
-            culoare_medie = img_small.getpixel((0, 0)) # Obținem (R, G, B)
-            luminozitate = sum(culoare_medie) / 3
+            rgb = img_small.getpixel((0, 0)) 
+            r, g, b = rgb
             
-            # PREDICȚIE BAZATĂ PE CULORI (Fără nume fixe în cod)
-            if luminozitate > 128:
-                vibe = "Culori Deschise / Energie Pozitivă"
-                piesa_nume = "Dance Hits 2026"
-                piesa_id = "v2H4l9RpkwM" # ID YouTube
+            # LOGICĂ DE PREDICȚIE (Transformăm culorile în genuri muzicale)
+            if r > g and r > b:
+                vibe = "Energie Roșie / Intens"
+                predictie = "Rock Hits 2026"
+            elif g > r and g > b:
+                vibe = "Vibe Verde / Relaxat"
+                predictie = "Chill Lo-Fi Beats"
+            elif b > r and b > g:
+                vibe = "Stil Albastru / Elegant"
+                predictie = "Jazz Piano Classics"
+            elif sum(rgb) > 600:
+                vibe = "Alb/Luminos / Vesel"
+                predictie = "Happy Pop Hits"
+            elif sum(rgb) < 150:
+                vibe = "Negru/Închis / Street"
+                predictie = "Deep Underground Techno"
             else:
-                vibe = "Culori Închise / Stil Street"
-                piesa_nume = "Hip-Hop / Underground Vibe"
-                piesa_id = "67_9fXU6z_o"
+                vibe = "Colorat / Mixt"
+                predictie = "Top Global Summer Hits"
 
-            # AFIȘARE REZULTATE
-            st.markdown(f"### 🤖 Analiză Culori: `{vibe}`")
-            st.markdown(f"### 🎵 Predicție: **{piesa_nume}**")
-
-            st.session_state.yt_id = piesa_id
+            st.markdown(f"### 🤖 Analiză Vibe: `{vibe}`")
+            st.markdown(f"### 🎵 Melodie Prezisă: **{predictie}**")
             
-            # Salvare în memorie
-            with open(LOG_FILE, "a") as f:
-                f.write(f"{vibe}|{piesa_nume}\n")
-            
-            st.success("✅ YouTube Auto-Play a pornit!")
+            # Salvăm predicția pentru player
+            st.session_state.search_query = predictie
+            st.success("✅ YouTube caută acum melodia!")
 
 with col2:
     st.subheader("📺 YouTube Player")
-    # Player curat cu pornire automată
-    yt_url = f"https://www.youtube.com/embed/{st.session_state.yt_id}?autoplay=1"
+    # Player care caută AUTOMAT predicția AI-ului
+    # Folosim embed de tip search pentru a aduce piesa prezisă
+    yt_url = f"https://www.youtube.com/embed?listType=search&list={st.session_state.search_query}&autoplay=1"
+    
     st.markdown(
-        f'<iframe width="100%" height="350" src="{yt_url}" frameborder="0" '
+        f'<iframe width="100%" height="400" src="{yt_url}" frameborder="0" '
         f'allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>', 
         unsafe_allow_html=True
     )
-    
-    st.divider()
-    st.write("📂 **Istoric (Memorie):**")
-    for item in st.session_state.istoric:
-        if len(item) == 2: st.write(f"✅ {item[1]} ({item[0]})")
+
+st.info("Sistemul analizează culorile (RGB) din haine și transformă datele în căutare muzicală.")
