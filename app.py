@@ -2,83 +2,44 @@ import streamlit as st
 import random
 import time
 from PIL import Image
+import urllib.parse
 
 # 1. Configurare & Design
-st.set_page_config(page_title="HERCULE AI - FULL TONOMAT", layout="wide")
+st.set_page_config(page_title="HERCULE AI - DJ TOTAL", layout="wide")
 
 st.markdown("""
     <style>
     .main { background-color: #0e1117; color: white; }
     iframe { border-radius: 20px; border: 4px solid #1ed760; box-shadow: 0px 0px 25px #1ed760; }
-    .stMarkdown h3 { color: #1ed760; font-family: 'Courier New', Courier, monospace; }
+    .stMarkdown h3 { color: #1ed760; }
     </style>
     """, unsafe_allow_html=True)
 
-if "yt_id" not in st.session_state:
-    st.session_state.yt_id = "v2H4l9RpkwM"
+if "search_query" not in st.session_state:
+    st.session_state.search_query = ""
 if "nume_piesa" not in st.session_state:
-    st.session_state.nume_piesa = "Sistem pregătit!"
+    st.session_state.nume_piesa = "Aștept analiză..."
 
-# 2. BAZA DE DATE MASIVĂ (Toată lista ta)
+# 2. TOATĂ LISTA TA (Căutare prin text - Fără ID-uri care să se blocheze)
 TOATA_LISTA = [
-    # PARTY & POP
-    {"nume": "Bruno Mars - Marry You", "id": "OMr9zCvtOfY"},
-    {"nume": "Pharrell Williams - Happy", "id": "ZbZSe6N_BXs"},
-    {"nume": "Daft Punk - Get Lucky", "id": "5NV6Rdv1a3I"},
-    {"nume": "Village People - Y.M.C.A.", "id": "VC_9v-Yv6zI"},
-    {"nume": "Taylor Swift - Shake It Off", "id": "nfWlot6h_JM"},
-    {"nume": "Michel Telo - Ai se eu te pego", "id": "hcm55lU9knw"},
-    {"nume": "Shakira - Waka Waka", "id": "pRpeEdMmmQg"},
-    {"nume": "LMFAO - Party Rock Anthem", "id": "KQ6zr6kCPj8"},
-    {"nume": "Justin Timberlake - Can't Stop The Feeling", "id": "ru0K8uYEZWw"},
-    {"nume": "Las Ketchup - Asereje", "id": "V0P_a99Uf6A"},
-    {"nume": "Los Del Rio - Macarena", "id": "XiBYM6uHYic"},
-    
-    # ROMÂNEȘTI POP & DANCE
-    {"nume": "Andra - Iubirea Schimba Tot", "id": "W-tP-Y6t1yU"},
-    {"nume": "Voltaj - 20 de ani", "id": "mU57v_9u_vY"},
-    {"nume": "O-Zone - Dragostea Din Tei", "id": "j_9v_UvF6zI"},
-    {"nume": "Loredana - Zig Zagga", "id": "Yn6iUf-pXyU"},
-    {"nume": "HI-Q - Gasca mea", "id": "p0y_v-tXyvY"},
-    {"nume": "3 Sud Est - Amintirile", "id": "vSInN5_Xv1s"},
-    {"nume": "N&D - Vino la mine", "id": "vSInN5_Xv1s"},
-    {"nume": "Connect-R - Vara nu dorm", "id": "vSInN5_Xv1s"},
-    {"nume": "Smiley - Oarecare", "id": "vSInN5_Xv1s"},
-    {"nume": "Vama - Perfect fara tine", "id": "vSInN5_Xv1s"},
-
-    # ROCK & METAL
-    {"nume": "AC/DC - Thunderstruck", "id": "v2AC41dglnM"},
-    {"nume": "AC/DC - Highway to Hell", "id": "l482T0yNkeo"},
-    {"nume": "Metallica - Nothing Else Matters", "id": "tAGnKpE4NCI"},
-    {"nume": "Bon Jovi - It's My Life", "id": "vx2u5uUu3DE"},
-    {"nume": "Queen - Don't Stop Me Now", "id": "HgzGwKwLmgM"},
-    {"nume": "Iris - De vei pleca", "id": "vSInN5_Xv1s"},
-    {"nume": "Cargo - Daca ploaia s-ar opri", "id": "vSInN5_Xv1s"},
-    {"nume": "Phoenix - Andrii Popa", "id": "vSInN5_Xv1s"},
-    {"nume": "Holograf - Ti-am dat un inel", "id": "vSInN5_Xv1s"},
-
-    # RETRO, POPULARĂ & KARAOKE
-    {"nume": "Dan Spataru - Drumurile noastre", "id": "H7I4m8G5zE8"},
-    {"nume": "Mirabela Dauer - Ioane, Ioane", "id": "Yv5yW6uM7-c"},
-    {"nume": "Ducu Bertzi - M-am indragostit numai de ea", "id": "S-O6v-YhG0I"},
-    {"nume": "Gica Petrescu - I-a mai toarna un paharel", "id": "R4X-v1_Xv-c"},
-    {"nume": "Zdob si Zdup - Moldoveni s-au nascut", "id": "S1XUOnE66f4"},
-    {"nume": "Angela Similea - Sa mori de dragoste ranita", "id": "vSInN5_Xv1s"},
-    {"nume": "Constantin Enceanu - Stai cu mine omule", "id": "vSInN5_Xv1s"},
-    {"nume": "Ionut Dolanescu - M-a facut mama oltean", "id": "vSInN5_Xv1s"},
-    {"nume": "Damian & Brothers - In statie la Lizeanu", "id": "vSInN5_Xv1s"},
-    {"nume": "Puiu Codreanu - Beau de bucurie", "id": "vSInN5_Xv1s"},
-
-    # HIP-HOP & STREET
-    {"nume": "B.U.G. Mafia - Sa Cante Trompetele", "id": "mE1_v_UvF6U"},
-    {"nume": "B.U.G. Mafia - Cine e cu noi", "id": "vSInN5_Xv1s"},
-    {"nume": "Parazitii - In focuri", "id": "vSInN5_Xv1s"},
-    {"nume": "Eminem - Lose Yourself", "id": "_Yhyp-_hKXY"},
-    {"nume": "The Weeknd - Blinding Lights", "id": "4NRXx6U8ABQ"},
-    {"nume": "50 Cent - In Da Club", "id": "5qm8PH4xAss"}
+    "Bruno Mars - Marry You", "Pharrell Williams - Happy", "Daft Punk - Get Lucky",
+    "Village People - Y.M.C.A.", "Taylor Swift - Shake It Off", "Michel Telo - Ai se eu te pego",
+    "Shakira - Waka Waka", "LMFAO - Party Rock Anthem", "Justin Timberlake - Can't Stop The Feeling",
+    "Las Ketchup - Asereje", "Los Del Rio - Macarena", "Andra - Iubirea Schimba Tot",
+    "Voltaj - 20 de ani", "O-Zone - Dragostea Din Tei", "Loredana - Zig Zagga",
+    "HI-Q - Gasca mea", "3 Sud Est - Amintirile", "N&D - Vino la mine",
+    "Connect-R - Vara nu dorm", "Smiley - Oarecare", "Vama - Perfect fara tine",
+    "AC/DC - Thunderstruck", "AC/DC - Highway to Hell", "Metallica - Nothing Else Matters",
+    "Bon Jovi - It's My Life", "Queen - Don't Stop Me Now", "Iris - De vei pleca",
+    "Cargo - Daca ploaia s-ar opri", "Phoenix - Andrii Popa", "Holograf - Ti-am dat un inel",
+    "Dan Spataru - Drumurile noastre", "Mirabela Dauer - Ioane, Ioane", "Ducu Bertzi - M-am indragostit numai de ea",
+    "Gica Petrescu - I-a mai toarna un paharel", "Zdob si Zdup - Moldoveni s-au nascut", "Angela Similea - Sa mori de dragoste ranita",
+    "Constantin Enceanu - Stai cu mine omule", "Ionut Dolanescu - M-a facut mama oltean", "Damian & Brothers - In statie la Lizeanu",
+    "Puiu Codreanu - Beau de bucurie", "B.U.G. Mafia - Sa Cante Trompetele", "B.U.G. Mafia - Cine e cu noi",
+    "Parazitii - In focuri", "Eminem - Lose Yourself", "The Weeknd - Blinding Lights", "50 Cent - In Da Club"
 ]
 
-st.title("🎰 HERCULE AI - TONOMATUL COMPLET")
+st.title("🎰 HERCULE AI - TONOMATUL CARE NU SE BLOCHEAZĂ")
 
 col1, col2 = st.columns([1, 1])
 
@@ -93,22 +54,25 @@ with col1:
         img = Image.open(sursa).convert('RGB')
         st.image(img, width=400)
         
-        # RULETA - Alege din toată lista masivă
+        # RULETA - Extrage piesa și pregătește link-ul de căutare
         piesa = random.choice(TOATA_LISTA)
-        st.session_state.yt_id = piesa['id']
-        st.session_state.nume_piesa = piesa['nume']
+        st.session_state.nume_piesa = piesa
+        st.session_state.search_query = urllib.parse.quote(piesa)
         
-        st.markdown(f"### 🎵 Melodie: **{piesa['nume']}**")
+        st.markdown(f"### 🎵 Melodie Aleasă: **{piesa}**")
 
 with col2:
     st.subheader("📺 YouTube Player")
-    yt_url = f"https://www.youtube.com/embed/{st.session_state.yt_id}?autoplay=1&mute=0"
     
-    st.markdown(
-        f'<iframe key="{st.session_state.yt_id}_{time.time()}" width="100%" height="400" src="{yt_url}" '
-        f'frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>', 
-        unsafe_allow_html=True
-    )
-    st.success(f"Acum rulează: {st.session_state.nume_piesa}")
+    if st.session_state.search_query:
+        # Folosim listType=search pentru a găsi mereu o variantă care merge
+        yt_url = f"https://www.youtube.com/embed?listType=search&list={st.session_state.search_query}&autoplay=1&mute=0"
+        
+        st.markdown(
+            f'<iframe key="{st.session_state.search_query}_{time.time()}" width="100%" height="400" src="{yt_url}" '
+            f'frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>', 
+            unsafe_allow_html=True
+        )
+        st.success(f"Acum rulează: {st.session_state.nume_piesa}")
 
-st.info("Aceasta este lista ta completă. La fiecare poză, AI-ul 'învârte ruleta' și alege o piesă surpriză.")
+st.info("Sistemul caută acum piesa prin text, deci nu mai există ID-uri invalide. Orice poză va genera o piesă funcțională!")
