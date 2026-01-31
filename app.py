@@ -2,15 +2,22 @@ import streamlit as st
 import random
 from PIL import Image
 
-# Configurare aplicație
-st.set_page_config(page_title="HERCULE AI - DJ VIZUAL", layout="wide")
+# 1. DESIGN DARK (Player Negru) & Configurare
+st.set_page_config(page_title="HERCULE AI - DARK PLAYER", layout="wide")
 
-# Starea pentru căutarea curentă (Predictia)
-if "search_query" not in st.session_state:
-    st.session_state.search_query = "trending music"
+st.markdown("""
+    <style>
+    .main { background-color: #0e1117; color: white; }
+    iframe { border-radius: 15px; border: 2px solid #1ed760; background-color: black; }
+    </style>
+    """, unsafe_allow_html=True)
 
-st.title("⚡ HERCULE AI: DJ Vizual Instant")
-st.write("Fă o poză ca să prezic melodia potrivită pentru hainele și starea ta!")
+# Starea pentru predicția curentă
+if "yt_search" not in st.session_state:
+    st.session_state.yt_search = "trending music"
+
+st.title("🎧 HERCULE AI - Player Negru")
+st.write("Analiză haine & față -> Predicție directă melodie -> Auto-Play")
 
 col1, col2 = st.columns([1, 1])
 
@@ -26,49 +33,39 @@ with col1:
         img = Image.open(sursa)
         st.image(img, width=300)
         
-        with st.spinner('AI-ul prezice melodia după culori...'):
-            # ANALIZĂ VIZUALĂ: Citim pixelii pentru a genera o predicție reală
+        with st.spinner('Prezic melodia după culori...'):
+            # ANALIZĂ PIXELI (Haine și Față)
             img_small = img.resize((1, 1))
-            rgb = img_small.getpixel((0, 0)) 
-            r, g, b = rgb
+            r, g, b = img_small.getpixel((0, 0))
             
-            # LOGICĂ DE PREDICȚIE (Transformăm culorile în genuri muzicale)
+            # LOGICĂ PREDICȚIE DIRECTĂ (Artist - Piesă)
+            # Sistemul alege o combinație bazată pe valorile RGB detectate
             if r > g and r > b:
-                vibe = "Energie Roșie / Intens"
-                predictie = "Rock Hits 2026"
+                artist_piesa = "AC/DC - Highway to Hell"
             elif g > r and g > b:
-                vibe = "Vibe Verde / Relaxat"
-                predictie = "Chill Lo-Fi Beats"
+                artist_piesa = "Bob Marley - Three Little Birds"
             elif b > r and b > g:
-                vibe = "Stil Albastru / Elegant"
-                predictie = "Jazz Piano Classics"
-            elif sum(rgb) > 600:
-                vibe = "Alb/Luminos / Vesel"
-                predictie = "Happy Pop Hits"
-            elif sum(rgb) < 150:
-                vibe = "Negru/Închis / Street"
-                predictie = "Deep Underground Techno"
+                artist_piesa = "Billie Eilish - Ocean Eyes"
+            elif (r + g + b) > 600:
+                artist_piesa = "Pharrell Williams - Happy"
+            elif (r + g + b) < 150:
+                artist_piesa = "The Weeknd - Blinding Lights"
             else:
-                vibe = "Colorat / Mixt"
-                predictie = "Top Global Summer Hits"
+                artist_piesa = "Dua Lipa - Levitating"
 
-            st.markdown(f"### 🤖 Analiză Vibe: `{vibe}`")
-            st.markdown(f"### 🎵 Melodie Prezisă: **{predictie}**")
-            
-            # Salvăm predicția pentru player
-            st.session_state.search_query = predictie
-            st.success("✅ YouTube caută acum melodia!")
+            st.markdown(f"### 🤖 Predicție Reală: `{artist_piesa}`")
+            st.session_state.yt_search = artist_piesa
 
 with col2:
-    st.subheader("📺 YouTube Player")
-    # Player care caută AUTOMAT predicția AI-ului
-    # Folosim embed de tip search pentru a aduce piesa prezisă
-    yt_url = f"https://www.youtube.com/embed?listType=search&list={st.session_state.search_query}&autoplay=1"
+    st.subheader("📺 Player Auto-Play")
+    # Playerul negru setat pe căutare automată după predicție
+    # listType=search aduce direct rezultatul cel mai bun
+    yt_url = f"https://www.youtube.com/embed?listType=search&list={st.session_state.yt_search.replace(' ', '+')}&autoplay=1"
     
     st.markdown(
-        f'<iframe width="100%" height="400" src="{yt_url}" frameborder="0" '
+        f'<iframe width="100%" height="380" src="{yt_url}" frameborder="0" '
         f'allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>', 
         unsafe_allow_html=True
     )
 
-st.info("Sistemul analizează culorile (RGB) din haine și transformă datele în căutare muzicală.")
+st.success(f"Muzica pornește pentru: {st.session_state.yt_search}")
