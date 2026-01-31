@@ -3,8 +3,8 @@ import random
 import time
 from PIL import Image
 
-# 1. Configurare & Design (Revenim la ce a funcționat)
-st.set_page_config(page_title="HERCULE AI - DJ VIZUAL", layout="wide")
+# 1. Configurare & Design
+st.set_page_config(page_title="HERCULE AI - DJ TOTAL", layout="wide")
 
 st.markdown("""
     <style>
@@ -13,13 +13,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Memorie sesiune
+# Memorie sesiune pentru a păstra piesa selectată
 if "yt_id" not in st.session_state:
     st.session_state.yt_id = "v2H4l9RpkwM"
 if "nume_piesa" not in st.session_state:
     st.session_state.nume_piesa = "Sistem pregătit!"
 
-# 2. Toată lista ta de melodii cu ID-uri sigure
+# 2. TOATĂ LISTA TA (Baza de date stabilă)
 TOATE_PIESELE = [
     {"nume": "Bruno Mars - Marry You", "id": "OMr9zCvtOfY"},
     {"nume": "Pharrell Williams - Happy", "id": "ZbZSe6N_BXs"},
@@ -40,33 +40,40 @@ TOATE_PIESELE = [
     {"nume": "Whitney Houston - I Will Always Love You", "id": "3JWTaaS7LdU"},
     {"nume": "AC/DC - Thunderstruck", "id": "v2AC41dglnM"},
     {"nume": "Metallica - Nothing Else Matters", "id": "tAGnKpE4NCI"},
-    {"nume": "Ducu Bertzi - M-am indragostit numai de ea", "id": "S-O6v-YhG0I"}
+    {"nume": "Ducu Bertzi - M-am indragostit numai de ea", "id": "S-O6v-YhG0I"},
+    {"nume": "Cargo - Daca ploaia s-ar opri", "id": "vSInN5_Xv1s"},
+    {"nume": "Iris - De vei pleca", "id": "vSInN5_Xv1s"},
+    {"nume": "Laura Stoica - Focul", "id": "vSInN5_Xv1s"}
 ]
 
-st.title("🎰 HERCULE AI - DJ-ul Tău Personal")
+st.title("🎰 HERCULE AI - Tonomatul Tău")
 
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    st.subheader("📸 Senzor Vizual")
+    st.subheader("📸 Senzor Vizual (Foto sau Upload)")
+    # Ambele opțiuni sunt acum prezente
     foto = st.camera_input("Fă o poză")
+    upload = st.file_uploader("Sau încarcă o poză din telefon/PC", type=['jpg', 'png', 'jpeg'])
     
-    if foto:
-        img = Image.open(foto).convert('RGB')
+    sursa = foto if foto else upload
+
+    if sursa:
+        img = Image.open(sursa).convert('RGB')
         st.image(img, width=400)
         
-        # Mixare și alegere la fiecare poză nouă
+        # Alegere nouă la fiecare poză/upload
         piesa = random.choice(TOATE_PIESELE)
         st.session_state.yt_id = piesa['id']
         st.session_state.nume_piesa = piesa['nume']
         
-        # Afișăm denumirea sub poză
+        # Scrie melodia sub poză
         st.markdown(f"### 🎵 Melodie: **{piesa['nume']}**")
 
 with col2:
     st.subheader("📺 YouTube Player")
     
-    # URL forțat cu cheie unică să se schimbe la fiecare poză
+    # Player stabil care se reîncarcă la fiecare selecție
     yt_url = f"https://www.youtube.com/embed/{st.session_state.yt_id}?autoplay=1&mute=0"
     
     st.markdown(
