@@ -12,11 +12,14 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-if "yt_search" not in st.session_state:
-    st.session_state.yt_search = "trending music"
+# Baza de date cu ID-uri reale pentru pornire instantanee
+if "yt_id" not in st.session_state:
+    st.session_state.yt_id = "v2H4l9RpkwM"
+if "nume_piesa" not in st.session_state:
+    st.session_state.nume_piesa = "Aștept analiză..."
 
 st.title("🎧 HERCULE AI - Player Negru")
-st.write("Analiză automată culori -> Predicție directă melodie")
+st.write("Analiză automată -> Predicție directă -> YouTube Auto-Play")
 
 col1, col2 = st.columns([1, 1])
 
@@ -28,42 +31,41 @@ with col1:
     sursa = foto if foto else upload
 
     if sursa:
-        # REPARARE EROARE: Convertim în RGB pentru a elimina canalul Alpha (transparența)
+        # Reparare eroare RGB
         img = Image.open(sursa).convert('RGB') 
         st.image(img, width=300)
         
         with st.spinner('Prezic melodia...'):
-            # ANALIZĂ PIXELI (Acum merge pe orice format)
             img_small = img.resize((1, 1))
             r, g, b = img_small.getpixel((0, 0))
             
-            # LOGICĂ PREDICȚIE DIRECTĂ (Artist - Piesă)
+            # LOGICĂ PREDICȚIE CU ID-URI REALE (Pentru a nu rămâne playerul negru)
             if r > g and r > b:
-                artist_piesa = "AC/DC - Highway to Hell"
+                piesa = {"nume": "AC/DC - Highway to Hell", "id": "l482T0yNkeo"}
             elif g > r and g > b:
-                artist_piesa = "Bob Marley - Three Little Birds"
+                piesa = {"nume": "Bob Marley - Three Little Birds", "id": "HNBCVM4KbUM"}
             elif b > r and b > g:
-                artist_piesa = "Billie Eilish - Ocean Eyes"
+                piesa = {"nume": "Billie Eilish - Ocean Eyes", "id": "viimfQi_pUw"}
             elif (r + g + b) > 500:
-                artist_piesa = "Pharrell Williams - Happy"
+                piesa = {"nume": "Pharrell Williams - Happy", "id": "ZbZSe6N_BXs"}
             elif (r + g + b) < 200:
-                artist_piesa = "The Weeknd - Blinding Lights"
+                piesa = {"nume": "The Weeknd - Blinding Lights", "id": "4NRXx6U8ABQ"}
             else:
-                artist_piesa = "Dua Lipa - Levitating"
+                piesa = {"nume": "Dua Lipa - Levitating", "id": "TUVcZfQe-Kw"}
 
-            st.markdown(f"### 🤖 Predicție Reală: `{artist_piesa}`")
-            st.session_state.yt_search = artist_piesa
+            st.markdown(f"### 🤖 Predicție Reală: `{piesa['nume']}`")
+            st.session_state.yt_id = piesa['id']
+            st.session_state.nume_piesa = piesa['nume']
 
 with col2:
     st.subheader("📺 YouTube Auto-Play")
-    # Căutare automată pe baza predicției
-    search_term = st.session_state.yt_search.replace(' ', '+')
-    yt_url = f"https://www.youtube.com/embed?listType=search&list={search_term}&autoplay=1"
+    # Folosim ID direct pentru a forța playerul să încarce piesa, nu căutarea
+    yt_url = f"https://www.youtube.com/embed/{st.session_state.yt_id}?autoplay=1&mute=0"
     
+    # Truc: Schimbăm cheia iframe-ului ca Streamlit să îl reîncarce forțat la fiecare poză
     st.markdown(
-        f'<iframe width="100%" height="380" src="{yt_url}" frameborder="0" '
-        f'allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>', 
+        f'<iframe key="{st.session_state.yt_id}" width="100%" height="380" src="{yt_url}" '
+        f'frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>', 
         unsafe_allow_html=True
     )
-
-st.success(f"Muzica rulează pentru: {st.session_state.yt_search}")
+    st.success(f"Acum cântă: {st.session_state.nume_piesa}")
