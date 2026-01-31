@@ -1,76 +1,84 @@
 import streamlit as st
-import random
+import google.generativeai as genai
 import os
+from PIL import Image
 
-# Configurare aplicație
-st.set_page_config(page_title="HERCULE AI - YOUTUBE DJ", layout="wide")
+# 1. CONFIGURARE PAGINĂ & API
+st.set_page_config(page_title="HERCULE AI - PURE VISION", layout="wide")
 
-# 1. MEMORIE PERSISTENTĂ
+# Introdu cheia ta Gemini în Streamlit Secrets
+if "GEMINI_API_KEY" in st.secrets:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    model = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    st.error("⚠️ Te rog adaugă GEMINI_API_KEY în Streamlit Secrets!")
+
+# 2. MEMORIE PERSISTENTĂ
 LOG_FILE = "hercule_history.txt"
 if "istoric" not in st.session_state:
     if os.path.exists(LOG_FILE):
         with open(LOG_FILE, "r") as f:
-            st.session_state.istoric = [l.strip().split("|") for l in f.readlines()[::-1][:5]]
+            st.session_state.istoric = [l.strip() for l in f.readlines()[::-1][:5]]
     else:
         st.session_state.istoric = []
 
-# Starea pentru Auto-Play YouTube
-if "yt_id" not in st.session_state:
-    st.session_state.yt_id = "v2H4l9RpkwM" # Start default: Bailalo
+if "yt_query" not in st.session_state:
+    st.session_state.yt_query = "trending music 2026"
 
-st.title("⚡ HERCULE AI: Analiză Vizuală & YouTube Auto-Play")
+st.title("⚡ HERCULE AI: Predicție Reală prin Imagine")
 
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    st.subheader("📸 Senzor Vizual (Cameră & Upload)")
-    # Comenzile tale: Take Photo + Upload
-    foto = st.camera_input("Fă o poză")
-    upload = st.file_uploader("Sau încarcă o poză", type=['jpg', 'png', 'jpeg'])
+    st.subheader("📸 Senzor Vizual")
+    foto = st.camera_input("Fă o poză (Camera Web)")
+    upload = st.file_uploader("Sau încarcă o fotografie", type=['jpg', 'png', 'jpeg'])
     
     sursa = foto if foto else upload
 
     if sursa:
-        st.image(sursa, width=250, caption="Imagine recepționată")
+        img = Image.open(sursa)
+        st.image(img, width=300, caption="Analiză AI în timp real...")
         
-        # 3. ANALIZĂ FOTO (Culori haine, Față, Vibe)
-        with st.spinner('Analizez culorile și vibe-ul...'):
-            # Bază de date internă YouTube
-            baza_yt = [
-                {"vibe": "Energetic / Culori Vii", "nume": "Bastard! - Bailalo", "id": "v2H4l9RpkwM"},
-                {"nume": "Bogdan DLP - Hitana", "id": "kJQP7kiw5Fk", "vibe": "Party / Stil Elegant"},
-                {"nume": "B.U.G. Mafia - Pantelimon", "id": "67_9fXU6z_o", "vibe": "Street / Culori Închise"},
-                {"nume": "Inna - Hot", "id": "Yw-QW6N-j2U", "vibe": "Summer / Expresie Veselă"}
-            ]
-            
-            piesa = random.choice(baza_yt)
+        # 3. ANALIZĂ REALĂ GEMINI (Haine, Culori, Față)
+        with st.spinner('AI-ul „citește” stilul tău...'):
+            prompt = """
+            Analizează această imagine. Uită-te la culorile hainelor, stilul vestimentar și expresia feței. 
+            Pe baza acestora, generează DOAR numele unei piese muzicale celebre și artistul care s-ar potrivi perfect (ex: 'Nume Piesa - Artist'). 
+            Nu scrie alt text.
+            """
+            response = model.generate_content([prompt, img])
+            predictie_muzicala = response.text.strip()
 
-            # AFIȘARE REZULTATE
-            st.markdown(f"### 🤖 Analiză:")
-            st.write(f"👕 **Haine & Culori:** `{piesa['vibe']}`")
-            st.write(f"🎭 **Expresie Facială:** `Detectată`")
-            st.markdown(f"### 🎵 Predicție YouTube: **{piesa['nume']}**")
-
-            # 4. ACTIVARE AUTO-PLAY
-            st.session_state.yt_id = piesa['id']
+            # AFIȘARE REZULTAT AI
+            st.markdown(f"### 🤖 Predicție AI: **{predictie_muzicala}**")
+            st.session_state.yt_query = predictie_muzicala
             
             # Salvare în memorie
             with open(LOG_FILE, "a") as f:
-                f.write(f"{piesa['vibe']}|{piesa['nume']}\n")
+                f.write(f"{predictie_muzicala}\n")
             
-            st.success("✅ YouTube Auto-Play pornește acum!")
+            st.success("✅ Piesa a fost generată și trimisă în player!")
 
 with col2:
     st.subheader("📺 YouTube Auto-Player")
-    # Player YouTube fără nicio urmă de Spotify
-    yt_url = f"https://www.youtube.com/embed/{st.session_state.yt_id}?autoplay=1"
+    # Căutăm automat pe YouTube piesa generată de AI
+    search_url = f"https://www.youtube.com/results?search_query={st.session_state.yt_query.replace(' ', '+')}"
+    
+    # Notă: Pentru autoplay real pe un video specific, ar fi nevoie de YouTube Search API.
+    # Aici afișăm un player care caută piesa generată de AI.
+    st.info(f"🔍 AI-ul a ales: {st.session_state.yt_query}")
+    st.markdown(f"[▶️ Deschide Muzica pe YouTube]({search_url})")
+    
+    # Iframe de control (Embed automat - alternativă rapidă)
+    embed_url = f"https://www.youtube.com/embed?listType=search&list={st.session_state.yt_query}&autoplay=1"
     st.markdown(
-        f'<iframe width="100%" height="350" src="{yt_url}" frameborder="0" '
+        f'<iframe width="100%" height="350" src="{embed_url}" frameborder="0" '
         f'allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>', 
         unsafe_allow_html=True
     )
     
     st.divider()
-    st.write("📂 **Istoric Analize (Memorie):**")
+    st.write("📂 **Istoric Predicții AI (Memorie):**")
     for item in st.session_state.istoric:
-        if len(item) == 2: st.write(f"✅ {item[1]} ({item[0]})")
+        st.write(f"✅ {item}")
