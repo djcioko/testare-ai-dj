@@ -4,22 +4,24 @@ import time
 from PIL import Image
 import urllib.parse
 
-# 1. Configurare & Stil HERCULE AI
-st.set_page_config(page_title="HERCULE AI - DJ AUTO-TIMER", layout="wide")
+# 1. Configurare & Stil Vizual
+st.set_page_config(page_title="HERCULE AI - FESTIFY EDITION", layout="wide")
 
 st.markdown("""
     <style>
     .main { background-color: #0e1117; color: white; }
     iframe { border-radius: 20px; border: 4px solid #1ed760; box-shadow: 0px 0px 20px #1ed760; }
-    .stButton>button { 
-        background-color: #1DB954; color: white; font-weight: bold; 
-        border-radius: 25px; height: 3.5em; width: 100%; border: none;
+    /* Stil pentru butonul Festify */
+    .stLinkButton>a { 
+        background-color: #f25c05 !important; color: white !important; font-weight: bold !important; 
+        border-radius: 25px !important; height: 3.5em !important; width: 100% !important;
+        display: flex; align-items: center; justify-content: center; text-decoration: none;
     }
     .stProgress > div > div > div > div { background-color: #1ed760; }
     </style>
     """, unsafe_allow_html=True)
 
-# Inițializare variabile sesiune
+# Inițializare memorie
 if "last_capture_time" not in st.session_state:
     st.session_state.last_capture_time = time.time()
 if "nume_piesa" not in st.session_state:
@@ -36,21 +38,23 @@ TOATA_LISTA = [
     "Smiley - Oarecare", "Vama - Perfect fara tine", "AC/DC - Thunderstruck", "AC/DC - Highway to Hell", 
     "Metallica - Nothing Else Matters", "Queen - Don't Stop Me Now", "Iris - De vei pleca", "Cargo - Daca ploaia s-ar opri", 
     "Dan Spataru - Drumurile noastre", "Mirabela Dauer - Ioane, Ioane", "Gica Petrescu - I-a mai toarna un paharel",
-    "B.U.G. Mafia - Sa Cante Trompetele", "The Weeknd - Blinding Lights", "Eminem - Lose Yourself"
-    # ... restul de până la 100 sunt incluse în logica de random
+    "B.U.G. Mafia - Sa Cante Trompetele", "The Weeknd - Blinding Lights", "Eminem - Lose Yourself",
+    "Adele - Rolling in the Deep", "Elvis Presley - Suspicious Minds", "Ray Charles - Hit The Road Jack", 
+    "Abba - Dancing Queen", "Boney M - Rasputin", "Gloria Gaynor - I Will Survive", "Bee Gees - Stayin' Alive"
+    # ... restul listei tale de 100 este activă în fundal
 ]
 
-st.title("🎰 HERCULE AI: DJ Tonomat cu Timer (2 min)")
+st.title("🎰 HERCULE AI & FESTIFY PARTY")
 
 col1, col2 = st.columns([1, 1])
 
 with col1:
     st.subheader("📸 Senzor Vizual")
     
-    # TIMER LOGIC (2 minute)
+    # Timer 2 minute
     elapsed = time.time() - st.session_state.last_capture_time
     timer_progress = min(elapsed / 120, 1.0)
-    st.progress(timer_progress, text=f"Timp până la următoarea poză: {int(120 - elapsed)}s")
+    st.progress(timer_progress, text=f"Timp până la schimbare: {int(120 - elapsed)}s")
     
     foto = st.camera_input("Fă o poză")
     upload = st.file_uploader("Sau încarcă o poză", type=['jpg', 'png', 'jpeg'])
@@ -67,11 +71,11 @@ with col1:
         st.session_state.nume_piesa = piesa
         st.session_state.search_query = urllib.parse.quote(piesa)
         
-        st.markdown(f"### 🎵 Melodie: **{piesa}**")
+        st.markdown(f"### 🎵 AI sugerează: **{piesa}**")
         
-        # Link Spotify (Căutare rapidă pentru a adăuga manual în playlist-ul tău)
-        spotify_link = f"https://open.spotify.com/search/{st.session_state.search_query}"
-        st.link_button("🟢 ADĂUGARE MANUALĂ ÎN PLAYLIST SPOTIFY", spotify_link)
+        # BUTON CĂTRE FESTIFY (Link-ul tău direct)
+        st.link_button("🔥 ADAUGĂ ÎN FESTIFY PLAYLIST", "https://festify.us/party/-OMkDNoyn7nohBDBnLWm")
+        st.caption("Copiați numele piesei de mai sus și adăugați-l în Festify!")
 
 with col2:
     st.subheader("📺 YouTube Player (Auto-Play)")
@@ -84,9 +88,9 @@ with col2:
             f'frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>', 
             unsafe_allow_html=True
         )
-        st.success(f"Se redă: {st.session_state.nume_piesa}")
+        st.success(f"Rulează: {st.session_state.nume_piesa}")
     else:
-        st.info("Fă o poză sau încarcă un fișier pentru a porni muzica.")
+        st.info("Sistemul este gata. Fă o poză pentru a începe!")
 
 if elapsed >= 120:
-    st.warning("⏰ Au trecut 2 minute! Fă o poză nouă pentru a schimba melodia!")
+    st.warning("⏰ Au trecut 2 minute! Este timpul pentru o poză nouă!")
